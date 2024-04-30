@@ -1,5 +1,5 @@
 # NASSR
-**N**ot **A**nother **S**hitty **S**attelite **R**ecorder 
+**N**ot **A**nother **S**hitty **S**attelite **R**eciver
   Written in like 1.5 hours, this _premium_ software uses python and satdump to record and process meteor M2-4 and M2-3 images.
   This hacked together **thing** is being worked on semi actively.
   BTW I will try to keep compatibility with x86 and raspberry too
