@@ -21,6 +21,12 @@ config = open("sats.json","r").read()
 #config = "\n".join(config.split(r"\n"))
 print(config)
 cnfg_json = json.loads(config)
+noaa_over_meteor=False
+if cnfg_json["noaa_over_meteor"] == "true":
+    noaa_over_meteor = True
+else: # IK this is not needed rn, but in the future.....
+    noaa_over_meteor = False
+
 #                E longtitude to west :D
 #qth = (47.188200,360-18.408900,110)
 qth = strListToTuple(cnfg_json["qth"])
