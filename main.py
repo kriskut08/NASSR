@@ -21,7 +21,7 @@ config = open("sats.json","r").read()
 #config = "\n".join(config.split(r"\n"))
 print(config)
 cnfg_json = json.loads(config)
-#                E lobgtitude to west :D
+#                E longtitude to west :D
 #qth = (47.188200,360-18.408900,110)
 qth = strListToTuple(cnfg_json["qth"])
 print(qth)
@@ -36,7 +36,7 @@ for i in sats:
     sat = predict.observe(tle, qth)
     print(sat['name'])
 
-    prediction = predict.transits(tle,qth,1714313020,1714313020+86400) # +one day
+    prediction = predict.transits(tle,qth,int(datetime.now().timestamp()),int(datetime.now().timestamp())+86400) # +one day
     print("Start of Transit\tTransit Duration (s)\tPeak Elevation")
     for transit in prediction:
         print(f"{transit.start}\t{transit.duration()}\t{transit.peak()['elevation']}")
