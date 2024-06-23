@@ -1,8 +1,9 @@
-from  datetime import datetime
+from datetime import datetime
 import tzlocal
 import json
 import predict
 import os
+
 
 
 def strListToTuple(string:str):
@@ -46,5 +47,10 @@ for i in sats:
         outdir = "/satdata/"+str(sat["name"]).lower().replace(" ","_")+"_"+ str(datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%y%b%-d-%H:%M'))
         time = datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%-Y%m%d%H%M.%S') #this is for at and it is the LEAST sane mode of specifying time. 
         # like look at this shit:  YYMMDDhhmm.ss
-        print(f'echo "satdump live {i["mode"]} {outdir} --source rtlsdr --samplerate 2.4e6 --frequency {i["frequency"]} --lna_agc --gain 37 --timeout {str(transit.duration())} --http_server 127.0.0.1:8998" | at -t {time}')
-        os.system(f'echo "satdump live {i["mode"]} {outdir} --source rtlsdr --samplerate 2.4e6 --frequency {i["frequency"]} --lna_agc --gain 37 --timeout {str(transit.duration())} --http_server 127.0.0.1:8998" | at -t {time}')
+        
+        #print(f'echo "satdump live {i["mode"]} {outdir} --source rtlsdr --samplerate 2.4e6 --frequency {i["frequency"]} --lna_agc --gain 37 --timeout {str(transit.duration())} --http_server 127.0.0.1:8998" | at -t {time}')
+        pwd = os.popen("pwd").read()[:-1] # kell a :-1 mert a process outputon van egy \n
+        print(f'python3 {pwd}/record.py {i["mode"]} {outdir} {i["frequency"]} {str(transit.duration())} {pwd}')
+        
+        os.system(f'echo "python3 {pwd}/record.py {i["mode"]} {outdir} {i["frequency"]} {str(transit.duration())}" | at -t {time}')
+        
