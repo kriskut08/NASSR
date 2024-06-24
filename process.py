@@ -11,4 +11,4 @@ os.system(f"satdump {mode} baseband {outdir}/recording.f32 {outdir}/decode/ --sa
 # alr this is done, now I'll do something that is called a pro gamer move, and tar the entire thing
 # to make downloading the raw data faster
 # TODO:make this better
-subprocess.Popen(["tar","-zcvf","decode.tar.gz",f"{outdir}/decode"])
+subprocess.Popen(["tar","-zcvf",f"{outdir}/decode.tar.gz",f"{outdir}/decode"])
