@@ -52,5 +52,5 @@ for i in sats:
         pwd = os.popen("pwd").read()[:-1] # kell a :-1 mert a process outputon van egy \n
         print(f'python3 {pwd}/record.py {i["mode"]} {outdir} {i["frequency"]} {str(transit.duration())} {pwd}')
         
-        os.system(f'echo "python3 {pwd}/record.py {i["mode"]} {outdir} {i["frequency"]} {str(transit.duration())}" | at -t {time}')
+        os.system(f'echo "python3 {pwd}/record.py {i["mode"]} {outdir} {i["frequency"]} {str(transit.duration())} {pwd}" | at -t {time}')
         
