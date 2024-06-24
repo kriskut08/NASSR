@@ -6,6 +6,7 @@
 
   > Disclamer: this project is made by a 16yo and is NOT the stabilest thing in the world
 # GOALS
+  create some working software that is convinient enugh to use
   ToDo:
 - web monitoring
 - web config
