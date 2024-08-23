@@ -1,3 +1,13 @@
+
+# Made by kriskut08
+# 
+#_____   ______________________________ 
+#___  | / /__    |_  ___/_  ___/__  __ \
+#__   |/ /__  /| |____ \_____ \__  /_/ /
+#_  /|  / _  ___ |___/ /____/ /_  _, _/ 
+#/_/ |_/  /_/  |_/____/ /____/ /_/ |_|  
+#                                       
+
 from datetime import datetime
 import tzlocal
 import json
@@ -35,8 +45,6 @@ os.system("for i in `atq | awk '{print $1}'`;do atrm $i;done")
 min_peak_elev = int(cnfg_json["minimum_elevation"])
 
 
-#this is needed because this makes it possible to check for overlap
-#IMPORTANT note for overlap checking: it priorotizes based on the position in the sats.json
 scheduled = []
 
 
@@ -49,29 +57,53 @@ for i in range(len(sats)):
     prediction = predict.transits(tle,qth,int(datetime.now().timestamp()),int(datetime.now().timestamp())+86400) # +one day
     #print("Start of Transit\tTransit Duration (s)\tPeak Elevation")
     for transit in prediction:
-        #overlap checking and min elevation checking
-        #thank you random stackoverflow user for the idea ;) https://stackoverflow.com/a/25369187
-        overlap=False
-        for j in scheduled:
-            #two passes overlap when the firts ones start and the second ones end is less than the sum of the two passes duration
-            maxdur = max(j[1],transit.end) - min(j[0],transit.start)
-            if maxdur < j[2] + int(transit.duration()):
-                overlap = True
-        
+        #elevation checking
         above_min_elev = float(transit.peak()['elevation']) > min_peak_elev 
+        if above_min_elev:
+            #overlap checking
+            #thank you random stackoverflow user for the idea ;) https://stackoverflow.com/a/25369187
+            overlapnum=None
+            overlap=False
+            for j in range(len(scheduled)):
+                #two passes overlap when the firts ones start and the second ones end is less than the sum of the two passes duration
+                maxdur = max(scheduled[j][1],transit.end) - min(scheduled[j][0],transit.start)
+                if maxdur < scheduled[j][2] + int(transit.duration()):
+                    overlap = True
+                    overlapnum = j
 
-        if not(overlap) and above_min_elev:
-            # ok this is the part where we schedule jobs 
-            # NOTE: this is extremely shit and I do not like it but here we go :'D
-            print("scheduling...")
-            scheduled.append([transit.start,transit.end,int(transit.duration())])
-            outdir = "/satdata/"+str(sat["name"]).lower().replace(" ","_")+"_"+ str(datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%y%b%-d-%H:%M'))
-            time = datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%-Y%m%d%H%M.%S') #this is for at
-            pwd = os.popen("pwd").read()[:-1] # kell a :-1 mert a process outputon van egy \n
-            print(f'python3 {pwd}/record.py {outdir} {sats[i]["frequency"]} {str(int(transit.duration()))} {pwd} {i}')
+            if not(overlap):
+                #this happens when there is no overlap so we can just add it to the schedule :D
+                # NOTE: this is extremely shit and I do not like it but here we go :'D
+                print("No overlap, adding to schedule list...")
+                outdir = "/satdata/"+str(sat["name"]).lower().replace(" ","_")+"_"+ str(datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%y%b%-d-%H:%M'))
+                time = datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%-Y%m%d%H%M.%S') #this is for at
+                pwd = os.popen("pwd").read()[:-1] # kell a :-1 mert a process outputon van egy \n
+                print(f'python3 {pwd}/record.py {outdir} {sats[i]["frequency"]} {str(int(transit.duration()))} {pwd} {i}')
+                #add to list
+                scheduled.append([transit.start,transit.end,int(transit.duration()),float(transit.peak()['elevation']),f'echo "python3 {pwd}/record.py {outdir} {sats[i]["frequency"]} {str(int(transit.duration()))} {pwd} {i}" | at -t {time}'])
+            else:
+                #overlap is detected
+                print("OVERLAP DETECTED")
+                overlapedMaxElavation = scheduled[overlapnum][3]
+                # this is probably not the prettiest way but this is the best i could come up with
+                if overlapedMaxElavation < float(transit.peak()['elevation']): #check if the transit is higher than the one it overlaps with
+                    print("Newer pass has higher peak elevation, overwriting! -------------------------------------------------")
+                    # this is repeated code
+                    outdir = "/satdata/"+str(sat["name"]).lower().replace(" ","_")+"_"+ str(datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%y%b%-d-%H:%M'))
+                    time = datetime.fromtimestamp(float(transit.start), local_timezone).strftime('%-Y%m%d%H%M.%S') #this is for at
+                    pwd = os.popen("pwd").read()[:-1] # the :-1 is needed because the process output has a \n on its end
+                    print("old:")
+                    print(scheduled[overlapnum])
+                    scheduled[overlapnum] = [transit.start,transit.end,int(transit.duration()),float(transit.peak()['elevation']),f'echo "python3 {pwd}/record.py {outdir} {sats[i]["frequency"]} {str(int(transit.duration()))} {pwd} {i}" | at -t {time}']
+                    print("new:")
+                    print(scheduled[overlapnum])
 
-            os.system(f'echo "python3 {pwd}/record.py {outdir} {sats[i]["frequency"]} {str(int(transit.duration()))} {pwd} {i}" | at -t {time}')
-        else:
-            print("OVERLAP DETECTED or NOT ABOVE MINIMUM PEAK ELEVATION, not scheduling")
-        
-print(len(scheduled))
+print("""
+#----------------------
+# scheduling with at...
+#----------------------""")
+for i in scheduled:
+    os.system(i[4])
+    print("-"*15)
+    print(f"transit start:{str(i[0])}, end:{str(i[1])}, duration: {str(i[2])}, peak: {str(i[3])}, cmd: '{i[4]}'")
+print(scheduled)
